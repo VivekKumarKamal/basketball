@@ -6,26 +6,37 @@ from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from . import db
 
-auth = Blueprint('web_auth', __name__)
+auth = Blueprint('auth', __name__)
 
 
 @auth.route('/login', methods=['GET', 'POST'])
-def seller_login():
+def login():
     if request.method == 'POST':
         user_name = request.form.get('user_name')
         password = request.form.get('password')
-        user =Admin.query.filter_by(user_name=user_name).first()
+        user = Admin.query.filter_by(user_name=user_name).first()
         if user and check_password_hash(user.password, password):
             flash('Logged in', category='success')
             login_user(user, remember=True)
-            return redirect(url_for('web_views.sell'))
+            return redirect(url_for('views.home'))
         else:
             flash("Incorrect username or password", category='error')
     return render_template('login.html')
 
+@auth.route('/log-out')
+@login_required
+def log_out():
+    logout_user()
+    flash("You're logged-out successfully.", category='success')
+    return redirect(url_for('views.home'))
+
 
 @auth.route('/sign-up', methods=['GET', 'POST'])
 def sign_up():
+    user = Admin.query.filter_by(id=1).first()
+    if user:
+        return "Bro, there is already a admin. Please don't try to open this link. Okkay!"
+
     if request.method == 'POST':
         user_name = request.form.get('user_name')
         password = request.form.get('password')
@@ -45,4 +56,4 @@ def sign_up():
             login_user(new_user, remember=True)
             return redirect(url_for('views.home'))
 
-    return render_template('sign-up.html')
+    return render_template('sign_up.html')
